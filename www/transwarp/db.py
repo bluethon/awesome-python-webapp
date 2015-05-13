@@ -2,9 +2,14 @@
 # -*- coding:utf8 -*-
 # db.py
 
+# note
+# 1.__a 不允许外部访问变量(但还是有办法)
+# 2._a  不推荐外部访问
+# 3.__a__ 系统特殊变量 不在上面1.2.范围内 均可访问
+import threading
+
 # 数据库引擎对象:
 class _Engine(object):
-    """docstring for _Engine"""
     def __init__(self, connect):
         self._connect = connect
     def connect(self):
@@ -35,6 +40,9 @@ class _DbCtx(threading.local):
 
 _db_ctx = _DbCtx()
 
+# 上下文管理器(先执行enter,然后程序,最后exit) 优化版try finally
+# 自动获取和释放连接
+
 class _ConnectionCtx(object):
     def __enter__(self):
         global _db_ctx
@@ -49,5 +57,6 @@ class _ConnectionCtx(object):
         if self.should_cleanup:
             _db_ctx.cleanup()
 
+# API
 def connection():
     return _ConnectionCtx()
