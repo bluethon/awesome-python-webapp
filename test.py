@@ -19,9 +19,9 @@ def with_connection(func):
     return _wrapper()
 
 @with_connection
-def test():
-    print "test"
+def test(a):
+    print "test %s" % a
 
-t = test()
+t = test("123")
 
 t

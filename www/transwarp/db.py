@@ -1,12 +1,21 @@
 #!/usr/bin/env python
-# -*- coding:utf8 -*-
+# -*- coding:utf-8 -*-
+
 # db.py
+'''
+Database operation module.
+'''
 
 # note
 # 1.__a 不允许外部访问变量(但还是有办法)
 # 2._a  不推荐外部访问
 # 3.__a__ 系统特殊变量 不在上面1.2.范围内 均可访问
-import threading
+
+import threading, uuid
+import functools, logging, time
+
+# global engine object
+engine = None
 
 # 数据库引擎对象:
 class _Engine(object):
@@ -14,8 +23,6 @@ class _Engine(object):
         self._connect = connect
     def connect(self):
         return self._connect
-
-engine = None
 
 # 持有数据库连接的上下文对象:
 class _DbCtx(threading.local):
@@ -28,6 +35,7 @@ class _DbCtx(threading.local):
         return not self.connection is None
 
     def init(self):
+        logging.info('open lazy connection...')
         self.connection = _LasyConnection()
         self.transactions = 0
 
@@ -59,4 +67,24 @@ class _ConnectionCtx(object):
 
 # API
 def connection():
+    '''
+    Return _ConnectionCtx object that can be used by 'with' statement
+    '''
     return _ConnectionCtx()
+
+def with_connection(func):
+    '''
+    Decorator for reuse connection.
+
+    @with_connection
+    def foo(*args, **kw):
+        f1()
+        f2()
+        f3()
+    '''
+    @functools.wraps(func)
+    def _wrapper(*args, **kw):
+        with _ConnectionCtx():
+            return func(*args, **kw)
+    return _wrapper
+
