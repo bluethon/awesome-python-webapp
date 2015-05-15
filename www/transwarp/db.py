@@ -14,6 +14,45 @@ Database operation module.
 import threading, uuid
 import functools, logging, time
 
+class Dict(dict):
+    def __init__(self, names=(), values=(), **kw):
+        super(Dict, self).__init__(**kw)
+        for k, v in zip(names, values):
+            self[k] = v
+
+    def __getattr__(self, key):
+        try:
+            return self[key]
+        except KeyError:
+            raise AttributeError(r"'Dict' object has no attribute '%s'") % key
+
+    def __setattr__(self, key, value):
+        self[key] = value
+
+def next_id(t=None):
+    '''
+    Return next id as 50-char string.
+
+    Args:
+        t: unix timestamp, default to None and using time.time().
+    '''
+    if t is None:
+        t = time.time()
+    return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
+
+def _profiling(start, sql=''):
+    t = time.time() - start
+    if t > 0.1:
+        logging.warning('[PROFILING] [DB] %s: %s' % (t, sql))
+    else:
+        logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
+
+class DBError(Exception):
+    pass
+
+class MultiColumnsError(DBError):
+    pass
+
 # global engine object
 engine = None
 
@@ -68,7 +107,10 @@ class _ConnectionCtx(object):
 # API
 def connection():
     '''
-    Return _ConnectionCtx object that can be used by 'with' statement
+    Return _ConnectionCtx object that can be used by 'with' statement:
+
+    with connection():
+        pass
     '''
     return _ConnectionCtx()
 
@@ -84,6 +126,7 @@ def with_connection(func):
     '''
     @functools.wraps(func)
     def _wrapper(*args, **kw):
+        # with 后面函数加()
         with _ConnectionCtx():
             return func(*args, **kw)
     return _wrapper
