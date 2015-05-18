@@ -53,15 +53,29 @@ class DBError(Exception):
 class MultiColumnsError(DBError):
     pass
 
-# global engine object
-engine = None
+class _LasyConnection(object):
+    def __init__(self):
+        self.connection = None
 
-# 数据库引擎对象:
-class _Engine(object):
-    def __init__(self, connect):
-        self._connect = connect
-    def connect(self):
-        return self._connect
+    def cursor(self):
+        if self.connection is None:
+            connection = engine.connect()
+            logging.info('open connection <%s>...' % hex(id(connection)))
+            self.connection = connection
+        return self.connection.cursor()
+
+    def commit(self):
+        self.connection.commit()
+
+    def rollback(self):
+        self.connection.rollback()
+
+    def cleanup(self):
+        if self.connection:
+            connection = self.connection
+            self.connection = None
+            logging.info('close connection <%s>...' % hex(id(connection)))
+            connection.close()
 
 # 持有数据库连接的上下文对象:
 class _DbCtx(threading.local):
@@ -85,12 +99,47 @@ class _DbCtx(threading.local):
     def cursor(self):
         return self.connection.cursor()
 
+# thread-local db context:
 _db_ctx = _DbCtx()
+
+# global engine object
+engine = None
+
+# 数据库引擎对象:
+class _Engine(object):
+    def __init__(self, connect):
+        self._connect = connect
+    def connect(self):
+        return self._connect()
+
+def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
+    import mysql.connector
+    global engine
+    if engine is not None:
+        raise DBError('Engine is already initialized.')
+    params = dict(user=user, password=password, database=database, host=host, port=port)
+    # collation: 校对
+    defaults = dict(use_unicode=True, charset='utf-8', collation='utf8_general_ci', autocommit=False)
+    for k, v in defaults.iteritems():
+        params[k] = kw.pop(k, v)
+    params.update(kw)
+    params['buffered'] = True
+    engine = _Engine(lambda: mysql.connector.connect(**params))
+    # test connection...
+    logging.info('Init mysql engine <%s> ok.') % hex(id(engine))
 
 # 上下文管理器(先执行enter,然后程序,最后exit) 优化版try finally
 # 自动获取和释放连接
-
 class _ConnectionCtx(object):
+    '''
+    _ConnectionCtx object that can open and close connection context.
+    _ConnectionCtx object can be nested and only the most outer connection has effect.
+
+    with connection():
+        pass
+        with connection():
+            pass
+    '''
     def __enter__(self):
         global _db_ctx
         self.should_cleanup = False
@@ -131,3 +180,10 @@ def with_connection(func):
             return func(*args, **kw)
     return _wrapper
 
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    create_engine('blue', '5088794', 'test')
+    #update('drop table if exists user')
+    #update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
+    import doctest
+    doctest.testmod()
