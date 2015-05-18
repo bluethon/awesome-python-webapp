@@ -180,10 +180,134 @@ def with_connection(func):
             return func(*args, **kw)
     return _wrapper
 
+class _TransactionCtx(object):
+    '''
+    _TransactionCtx object that can handle transactions.
+
+    with _TransactionCtx():
+        pass
+    '''
+
+    def __enter__(self):
+        global _db_ctx
+        self.should_close_conn = False
+        if not _db_ctx.is_init():
+            # needs open a connection first:
+            _db_ctx.is_init()
+            self.should_close_conn = True
+        _db_ctx.transactions = _db_ctx.transactions + 1
+        logging.info('begin transaction...' if _db_ctx.transactions==1 else 'join current transaction...')
+        return self
+
+    def __exit__(self, exctype, excvalue, traceback):
+        global _db_ctx
+        _db_ctx.transactions = _db_ctx.transactions - 1
+        try:
+            if _db_ctx.transactions==0:
+                if exctype is None:
+                    self.commit()
+                else:
+                    self.rollback()
+        finally:
+            if self.should_close_conn:
+                _db_ctx.cleanup
+
+    def commit(self):
+        global _db_ctx
+        logging.info('commit transaction...')
+        try:
+            _db_ctx.connection.commit()
+            logging.info('commit ok.')
+        except:
+            logging.warning('commit failed. try rollback...')
+            _db_ctx.connection.rollback()
+            logging.warning('rollback ok.')
+            raise
+    def rollback(self):
+        global _db_ctx
+        logging.warning('rollback transaction...')
+        _db_ctx.connection.rollback()
+        logging.info('rollback ok.')
+
+def transaction():
+    return _TransactionCtx()
+
+def with_transaction(func):
+    @functools.wraps(self)
+    def _wrapper(*args, **kw):
+        _start = time.time()
+        with _TransactionCtx():
+            return func(*args, **kw)
+        _profiling(_start)
+    return _wrapper
+
+def _select(sql, first, *args):
+    ' execute select SQL and return unique result or list results.'
+    global _db_ctx
+    cursor = None
+    sql = sql.replace('?', '%s')
+    logging.info('SQL: %s, ARGS: %s' % (sql, args))
+    try:
+        cursor = _db_ctx.connection.cursor()
+        cursor.execute(sql, args)
+        if cursor.description:
+            names = [x[0] for x in cursor.description()]
+        if first:
+            values = cursor.fetchone()
+            if not values:
+                return None
+            return Dict(names, values)
+        return [Dict(names, x) for x in cursor.fetchall()]
+    finally:
+        if cursor:
+            cursor.close()
+
+@with_connection
+def select_one(sql, *args):
+    return _select(sql, True, *args)
+
+@with_connection
+def select_int(sql, *args):
+    d = _select(sql, True, *args)
+    if len(d)!=1:
+        raise MultiColumnsError('Expect only one column.')
+    return d.values([0])
+
+@with_connection
+def select(sql, *args):
+    return _select(sql, False, *args)
+
+@with_connection
+def _update(sql, *args):
+    global _db_ctx
+    cursor = None
+    sql = sql.replace('?', '%s')
+    logging.info('SQL: %s, ARGS: %s' % (sql, args))
+    try:
+        cursor = _db_ctx.connection.cursor()
+        cursor.execute(sql, args)
+        r = cursor.rowcount
+        if _db_ctx.transactions==0:
+            # no transaction environment:
+            logging.info('auto commit')
+            _db_ctx.connection.commit()
+        return r
+    finally:
+        if cursor:
+            cursor.close()
+
+def insert(table, **kw):
+    cols, args = zip(*kw.iteritems())
+    sql = 'insert into `%s` (%s) values (%s)' % (table, ','.join(['?' for i in range(len(cols))]))
+    return _update(sql, *args)
+
+def update(sql, *args):
+    return _update(sql, *args)
+
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     create_engine('blue', '5088794', 'test')
-    #update('drop table if exists user')
-    #update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
+    update('drop table if exists user')
+    update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
     import doctest
     doctest.testmod()
