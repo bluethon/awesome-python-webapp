@@ -44,7 +44,9 @@ class Dict(dict):
     3
     '''
     def __init__(self, names=(), values=(), **kw):
+        #继承dict的初始化初始**kw
         super(Dict, self).__init__(**kw)
+        #zip() 转置 返回list
         for k, v in zip(names, values):
             self[k] = v
 
@@ -145,10 +147,12 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
     global engine
     if engine is not None:
         raise DBError('Engine is already initialized.')
+    #parameter 参数初始化
     params = dict(user=user, password=password, database=database, host=host, port=port)
 
     # collation: 校对
     defaults = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
+    #iteritems() 同时迭代dict的key和value
     for k, v in defaults.iteritems():
         params[k] = kw.pop(k, v)
     params.update(kw)
@@ -223,7 +227,7 @@ class _TransactionCtx(object):
         self.should_close_conn = False
         if not _db_ctx.is_init():
             # needs open a connection first:
-            _db_ctx.is_init()
+            _db_ctx.init()
             self.should_close_conn = True
         _db_ctx.transactions = _db_ctx.transactions + 1
         logging.info('begin transaction...' if _db_ctx.transactions==1 else 'join current transaction...')
