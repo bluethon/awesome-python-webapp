@@ -50,12 +50,12 @@ class Dict(dict):
         for k, v in zip(names, values):
             self[k] = v
 
+    # 可以动态返回诸如 dict.abc 这样的值
     def __getattr__(self, key):
         try:
             return self[key]
         except KeyError:
             raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
-
     def __setattr__(self, key, value):
         self[key] = value
 
@@ -68,6 +68,7 @@ def next_id(t=None):
     '''
     if t is None:
         t = time.time()
+    # %d 十进制表示 0补齐共15个
     return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
 
 def _profiling(start, sql=''):
