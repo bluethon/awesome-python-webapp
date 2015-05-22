@@ -71,6 +71,7 @@ def next_id(t=None):
     # %d 十进制表示 0补齐共15个
     return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
 
+# profiling 性能分析
 def _profiling(start, sql=''):
     t = time.time() - start
     if t > 0.1:
@@ -91,6 +92,7 @@ class _LasyConnection(object):
     def cursor(self):
         if self.connection is None:
             connection = engine.connect()
+            #id 返回对象的内存地址 处理后类似<0x2c53470L> L 代表long integer
             logging.info('open connection <%s>...' % hex(id(connection)))
             self.connection = connection
         return self.connection.cursor()
