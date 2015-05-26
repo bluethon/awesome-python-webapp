@@ -155,9 +155,12 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
 
     # collation: 校对
     defaults = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
-    #iteritems() 同时迭代dict的key和value
+    #iteritems() 形成tuple的list, 同时迭代dict的key和value
     for k, v in defaults.iteritems():
+        # 如果kw[k]存在 更新到params[k]=kw[k]中, 同时删除kw[k]
+        # 如果kw[k]不存在, 返回默认值v 此时params[k]=v
         params[k] = kw.pop(k, v)
+    # kw中
     params.update(kw)
     params['buffered'] = True
     engine = _Engine(lambda: mysql.connector.connect(**params))
