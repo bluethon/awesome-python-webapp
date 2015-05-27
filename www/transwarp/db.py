@@ -11,10 +11,15 @@ Database operation module.
 # 2._a  不推荐外部访问
 # 3.__a__ 系统特殊变量 不在上面1.2.范围内 均可访问
 
-import threading, uuid
-import functools, logging, time
+import threading
+import uuid
+import functools
+import logging
+import time
+
 
 class Dict(dict):
+
     '''
     Simple dict but support access as x.y style.
     >>> d1 = Dict()
@@ -43,10 +48,11 @@ class Dict(dict):
     >>> d3.c
     3
     '''
+
     def __init__(self, names=(), values=(), **kw):
-        #继承dict的初始化初始**kw
+        # 继承dict的初始化初始**kw
         super(Dict, self).__init__(**kw)
-        #zip() 转置 返回list
+        # zip() 转置 返回list
         for k, v in zip(names, values):
             self[k] = v
 
@@ -56,8 +62,10 @@ class Dict(dict):
             return self[key]
         except KeyError:
             raise AttributeError(r"'Dict' object has no attribute '%s'" % key)
+
     def __setattr__(self, key, value):
         self[key] = value
+
 
 def next_id(t=None):
     '''
@@ -72,6 +80,8 @@ def next_id(t=None):
     return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
 
 # profiling 性能分析
+
+
 def _profiling(start, sql=''):
     t = time.time() - start
     if t > 0.1:
@@ -79,20 +89,24 @@ def _profiling(start, sql=''):
     else:
         logging.info('[PROFILING] [DB] %s: %s' % (t, sql))
 
+
 class DBError(Exception):
     pass
+
 
 class MultiColumnsError(DBError):
     pass
 
+
 class _LasyConnection(object):
+
     def __init__(self):
         self.connection = None
 
     def cursor(self):
         if self.connection is None:
             connection = engine.connect()
-            #id 返回对象的内存地址 处理后类似<0x2c53470L> L 代表long integer
+            # id 返回对象的内存地址 处理后类似<0x2c53470L> L 代表long integer
             logging.info('open connection <%s>...' % hex(id(connection)))
             self.connection = connection
         return self.connection.cursor()
@@ -111,8 +125,12 @@ class _LasyConnection(object):
             connection.close()
 
 # 持有数据库连接的上下文对象:
+
+
 class _DbCtx(threading.local):
+
     """docstring for _DbCtx"""
+
     def __init__(self):
         self.connection = None
         self.transactions = 0
@@ -139,23 +157,29 @@ _db_ctx = _DbCtx()
 engine = None
 
 # 数据库引擎对象:
+
+
 class _Engine(object):
+
     def __init__(self, connect):
+        # connect 即为从lambda处返回的数据库连接
         self._connect = connect
+
     def connect(self):
         return self._connect()
+
 
 def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
     import mysql.connector
     global engine
     if engine is not None:
         raise DBError('Engine is already initialized.')
-    #parameter 参数初始化
+    # parameter 参数初始化
     params = dict(user=user, password=password, database=database, host=host, port=port)
 
     # collation: 校对
     defaults = dict(use_unicode=True, charset='utf8', collation='utf8_general_ci', autocommit=False)
-    #iteritems() 形成tuple的list, 同时迭代dict的key和value
+    # iteritems() 形成tuple的list, 同时迭代dict的key和value
     for k, v in defaults.iteritems():
         # 如果kw[k]存在 更新到params[k]=kw[k]中, 同时删除kw[k]
         # 如果kw[k]不存在, 返回默认值v 此时params[k]=v
@@ -163,6 +187,7 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
     # kw中
     params.update(kw)
     params['buffered'] = True
+    # engine 获得数据库链接
     engine = _Engine(lambda: mysql.connector.connect(**params))
     # test connection...
     #                         hex 转换为16进制   id 返回对象内存地址
@@ -170,7 +195,10 @@ def create_engine(user, password, database, host='127.0.0.1', port=3306, **kw):
 
 # 上下文管理器(先执行enter,然后程序,最后exit) 优化版try finally
 # 自动获取和释放连接
+
+
 class _ConnectionCtx(object):
+
     '''
     _ConnectionCtx object that can open and close connection context.
     _ConnectionCtx object can be nested and only the most outer connection has effect.
@@ -180,6 +208,7 @@ class _ConnectionCtx(object):
         with connection():
             pass
     '''
+
     def __enter__(self):
         global _db_ctx
         self.should_cleanup = False
@@ -194,6 +223,8 @@ class _ConnectionCtx(object):
             _db_ctx.cleanup()
 
 # API
+
+
 def connection():
     '''
     Return _ConnectionCtx object that can be used by 'with' statement:
@@ -213,14 +244,18 @@ def with_connection(func):
         f2()
         f3()
     '''
+    # functools.wraps->wrapper.__name__ = func.__name__
     @functools.wraps(func)
     def _wrapper(*args, **kw):
+        # with即为被增强的地方
         # with 后面函数加()
         with _ConnectionCtx():
             return func(*args, **kw)
+    # 返回func被包装后增强的函数
     return _wrapper
 
 class _TransactionCtx(object):
+
     '''
     _TransactionCtx object that can handle transactions.
 
@@ -236,21 +271,21 @@ class _TransactionCtx(object):
             _db_ctx.init()
             self.should_close_conn = True
         _db_ctx.transactions = _db_ctx.transactions + 1
-        logging.info('begin transaction...' if _db_ctx.transactions==1 else 'join current transaction...')
+        logging.info('begin transaction...' if _db_ctx.transactions == 1 else 'join current transaction...')
         return self
 
     def __exit__(self, exctype, excvalue, traceback):
         global _db_ctx
         _db_ctx.transactions = _db_ctx.transactions - 1
         try:
-            if _db_ctx.transactions==0:
+            if _db_ctx.transactions == 0:
                 if exctype is None:
                     self.commit()
                 else:
                     self.rollback()
         finally:
             if self.should_close_conn:
-                _db_ctx.cleanup()   #少了()
+                _db_ctx.cleanup()  # 少了()
 
     def commit(self):
         global _db_ctx
@@ -263,11 +298,13 @@ class _TransactionCtx(object):
             _db_ctx.connection.rollback()
             logging.warning('rollback ok.')
             raise
+
     def rollback(self):
         global _db_ctx
         logging.warning('rollback transaction...')
         _db_ctx.connection.rollback()
         logging.info('rollback ok.')
+
 
 def transaction():
     '''
@@ -293,6 +330,7 @@ def transaction():
     []
     '''
     return _TransactionCtx()
+
 
 def with_transaction(func):
     '''
@@ -322,6 +360,7 @@ def with_transaction(func):
         _profiling(_start)
     return _wrapper
 
+
 def _select(sql, first, *args):
     ' execute select SQL and return unique result or list results.'
     global _db_ctx
@@ -342,6 +381,7 @@ def _select(sql, first, *args):
     finally:
         if cursor:
             cursor.close()
+
 
 @with_connection
 def select_one(sql, *args):
@@ -364,6 +404,7 @@ def select_one(sql, *args):
     u'Alice'
     '''
     return _select(sql, True, *args)
+
 
 @with_connection
 def select_int(sql, *args):
@@ -390,10 +431,11 @@ def select_int(sql, *args):
     MultiColumnsError: Expect only one column.
     '''
     d = _select(sql, True, *args)
-    if len(d)!=1:
+    if len(d) != 1:
         raise MultiColumnsError('Expect only one column.')
     # wrong in here
     return d.values()[0]
+
 
 @with_connection
 def select(sql, *args):
@@ -419,6 +461,7 @@ def select(sql, *args):
     '''
     return _select(sql, False, *args)
 
+
 @with_connection
 def _update(sql, *args):
     global _db_ctx
@@ -429,7 +472,7 @@ def _update(sql, *args):
         cursor = _db_ctx.connection.cursor()
         cursor.execute(sql, args)
         r = cursor.rowcount
-        if _db_ctx.transactions==0:
+        if _db_ctx.transactions == 0:
             # no transaction environment:
             logging.info('auto commit')
             _db_ctx.connection.commit()
@@ -437,6 +480,7 @@ def _update(sql, *args):
     finally:
         if cursor:
             cursor.close()
+
 
 def insert(table, **kw):
     r'''
@@ -460,8 +504,10 @@ def insert(table, **kw):
     0
     '''
     cols, args = zip(*kw.iteritems())
-    sql = 'insert into `%s` (%s) values (%s)' % (table, ','.join(['`%s`' % col for col in cols]), ','.join(['?' for i in range(len(cols))]))
+    sql = 'insert into `%s` (%s) values (%s)' % (
+        table, ','.join(['`%s`' % col for col in cols]), ','.join(['?' for i in range(len(cols))]))
     return _update(sql, *args)
+
 
 def update(sql, *args):
     return _update(sql, *args)
