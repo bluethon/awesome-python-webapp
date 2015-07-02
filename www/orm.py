@@ -76,7 +76,7 @@ class StringField(Field):
 
 class BooleanField(Field):
 
-    def __init__(self, name=None, default=Falsed):
+    def __init__(self, name=None, default=False):
         super().__init__(name, 'boolean', False, default)
 
 class IntergerField(Field):
@@ -92,7 +92,7 @@ class FloatField(Field):
 class TextField(Field):
 
     def __init__(self, name=None, default=None):
-        super().__init__(name, 'real', primary_key, default)
+        super().__init__(name, 'text', False, default)
 
 class ModelMetaclass(type):
 
@@ -113,7 +113,7 @@ class ModelMetaclass(type):
                     if primaryKey:
                         raise StandardError('Duplicate primary key for field: %s' % k)
                     primaryKey = k
-                else:f
+                else:
                     fields.append(k)
         if not primaryKey:
             raise StandardError('Primary key not found.')
@@ -125,7 +125,7 @@ class ModelMetaclass(type):
         attrs['__primary_key__'] = primaryKey # 主键属性名
         attrs['__fields__'] = fields # 除主键外的属性名
         attrs['__select__'] = 'select `%s`, %s from `%s`' % (primaryKey, ', '.join(escaped_fields), tableName)
-        attrs['__insert__'] = 'insert into `%s` (%s, `%s`) values (%s)' % (tableName, ', '.join(escaped_fields), primaryKey, create_args_string(len(escaped_fields) + 1))'
+        attrs['__insert__'] = 'insert into `%s` (%s, `%s`) values (%s)' % (tableName, ', '.join(escaped_fields), primaryKey, create_args_string(len(escaped_fields) + 1))
         attrs['__update__'] = 'update `%s` set %s where `%s` =?' % (tableName, ', '.join(map(lambda f: '`%s`=?' % (mappings.get(f).name or f), fields)), primaryKey)
         attrs['__delete__'] = 'delete from `%s` where `%s`=?' % (tableName, primaryKey)
         return type.__new__(cls, name, bases, attrs)
