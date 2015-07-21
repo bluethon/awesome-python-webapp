@@ -24,3 +24,16 @@ class APIValueError(APIError):
     def __init__(self, field, message=''):
         super(APIValueError, self).__init__('value:invalid', field, message)
 
+class APIResourceNotFoundError(APIError):
+    '''
+    Indicate the resource was not found. The data specifies the resource name.
+    '''
+    def __init__(self, field, message=''):
+        super(APIResourceNotFoundError, self).__init__('value:notfound', field, message)
+
+class APIPremissionError(APIError):
+    """
+    Indicate the api has no premission.
+    """
+    def __init__(self, message=''):
+        super(APIPremissionError, self).__init__('premission:forbidden', 'premission', message)
