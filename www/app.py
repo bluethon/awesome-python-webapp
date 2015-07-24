@@ -44,7 +44,7 @@ def logger_factory(app, handler):
     @asyncio.coroutine
     def logger(request):
         logging.info('Request: %s %s' % (request.method, request.path))
-        # yield from asyncio.sleep(0.3)
+        yield from asyncio.sleep(0.3)
         return (yield from handler(request))
     return logger
 
@@ -123,7 +123,7 @@ def init(loop):
     ])
     init_jinja2(app, filters=dict(datetime=datetime_filter))
     add_routes(app, 'handlers')
-    app_static(app)
+    add_static(app)
     srv = yield from loop.create_server(app.make_handler(), '127.0.0.1', 9000)
     logging.info('server started at http://127.0.0.1:9000...')
     return srv

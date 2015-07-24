@@ -56,7 +56,7 @@ def has_named_kw_args(fn):
             return True
 
 def has_var_kw_arg(fn):
-    params = inspect.signature(fn).paramteters
+    params = inspect.signature(fn).parameters
     for name, param in params.items():
         if param.kind == inspect.Parameter.VAR_KEYWORD:
             return True
@@ -126,8 +126,8 @@ class RequestHandler(object):
         if self._has_request_arg:
             kw['request'] = request
         # check required kw:
-        if self._required_kw_arg:
-            for name in self._required_kw_arg:
+        if self._required_kw_args:
+            for name in self._required_kw_args:
                 if not name in kw:
                     return web.HTTPBadRequest('Missing argument: %s' % name)
         logging.info('call with args: %s' % str(kw))
