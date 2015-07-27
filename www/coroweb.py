@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# -*- coding:utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import asyncio, os, inspect, logging, functools
 
 from urllib import parse
+
 from aiohttp import web
+
 from apis import APIError
 
 def get(path):
@@ -34,7 +36,7 @@ def post(path):
     return decorator
 
 def get_required_kw_args(fn):
-    args =[]
+    args = []
     params = inspect.signature(fn).parameters
     for name, param in params.items():
         if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default == inspect.Parameter.empty:
@@ -42,7 +44,7 @@ def get_required_kw_args(fn):
     return tuple(args)
 
 def get_named_kw_args(fn):
-    args =[]
+    args = []
     params = inspect.signature(fn).parameters
     for name, param in params.items():
         if param.kind == inspect.Parameter.KEYWORD_ONLY:
@@ -67,7 +69,7 @@ def has_request_arg(fn):
     found = False
     for name, param in params.items():
         if name == 'request':
-            found == True
+            found = True
             continue
         if found and (param.kind != inspect.Parameter.VAR_POSITIONAL and param.kind != inspect.Parameter.KEYWORD_ONLY and param.kind != inspect.Parameter.VAR_KEYWORD):
             raise ValueError('request parameter must be the last named parameter in function: %s%s' % (fn.__name__, str(sig)))
@@ -121,7 +123,7 @@ class RequestHandler(object):
             # check named arg:
             for k, v in request.match_info.items():
                 if k in kw:
-                    logging.warning('Duplicate arg name in named arg and kw arg: %s' % k)
+                    logging.warning('Duplicate arg name in named arg and kw args: %s' % k)
                 kw[k] = v
         if self._has_request_arg:
             kw['request'] = request
@@ -135,11 +137,11 @@ class RequestHandler(object):
             r = yield from self._func(**kw)
             return r
         except APIError as e:
-            raise dict(error=e.error, data=e.data, message=e.message)
+            return dict(error=e.error, data=e.data, message=e.message)
 
 def add_static(app):
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-    app.router.add_static('/static', path)
+    app.router.add_static('/static/', path)
     logging.info('add static %s => %s' % ('/static/', path))
 
 def add_route(app, fn):
@@ -155,7 +157,7 @@ def add_route(app, fn):
 def add_routes(app, module_name):
     n = module_name.rfind('.')
     if n == (-1):
-        mod = __import__(module_name, globals(),locals())
+        mod = __import__(module_name, globals(), locals())
     else:
         name = module_name[n+1:]
         mod = getattr(__import__(module_name[:n], globals(), locals(), [name]), name)

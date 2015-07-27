@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding:utf-8 -*-
+# -*- coding: utf-8 -*-
 
 '''
 Default configurations.
@@ -12,7 +12,7 @@ configs = {
         'port': 3306,
         'user': 'www',
         'password': 'www',
-        'db': 'awesome',
+        'db': 'awesome'
     },
     'session': {
         'secret': 'Awesome'
