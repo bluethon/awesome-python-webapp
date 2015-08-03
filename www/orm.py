@@ -115,7 +115,7 @@ class ModelMetaclass(type):
                 logging.info('  found mapping: %s ==> %s' % (k, v))
                 mappings[k] = v
                 if v.primary_key:
-                    # 找到主键
+                    # 找到主键:
                     if primaryKey:
                         raise StandardError('Duplicate primary key for field: %s' % k)
                     primaryKey = k
