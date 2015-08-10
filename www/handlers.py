@@ -53,7 +53,8 @@ def cookie2user(cookie_str):
         user.passwd = '******'
         return user
     except Exception as e:
-        raise e
+        logging.exception(e)
+        return None
 
 @get('/')
 def index(request):
@@ -68,12 +69,50 @@ def index(request):
         'blogs': blogs
     }
 
-@get('/api/users')
-def api_get_users():
-    users = yield from User.findAll(orderBy='created_at desc')
-    for u in users:
-        u.passwd = '******'
-    return dict(users=users)
+@get('/register')
+def register():
+    return {
+        '__template__': 'register.html'
+    }
+
+@get('/signin')
+def signin():
+    return {
+        '__template__': 'signin.html'
+    }
+
+@post('/api/authenticate')
+def authenticate(*, email, passwd):
+    if not email:
+        raise APIValueError('email', 'Invalid email.')
+    if not passwd:
+        raise APIValueError('passwd', 'Invalid passwd.')
+    users = yield from User.findAll('email=?', [email])
+    if len(users) == 0:
+        raise APIValueError('email', 'Email not exist.')
+    user = users[0]
+    # check passwd:
+    sha1 = hashlib.sha1()
+    sha1.update(user.id.encode('utf-8'))
+    sha1.update(b' :')
+    sha1.update(passwd.encode('utf-8'))
+    if user.passwd != sha1.hexdigest():
+        raise APIValueError('passwd', 'Invalid password.')
+    # authenticate ok, set cookie:
+    r = web.Response()
+    r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)
+    user.passwd = '******'
+    r.content_type = 'application/json'
+    r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')
+    return r
+
+@get('/signout')
+def signout(request):
+    referer = request.headers.get('Referer')
+    r = web.HTTPFound(referer or '/')
+    r.set_cookie(COOKIE_NAME, '-deleted-', max_age=0, httponly=True)
+    logging.info('user signed out.')
+    return r
 
 _RE_EMAIL = re.compile(r'^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$')
 _RE_SHA1 = re.compile(r'^[0-9a-f]{40}$')
@@ -94,31 +133,6 @@ def api_register_user(*, email, name, passwd):
     user = User(id=uid, name=name.strip(), email=email, passwd=hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image='http://www.gravatar.com/avatar/%s?d=mm&s=120' % hashlib.md5(email.encode('utf-8')).hexdigest())
     yield from user.save()
     # make session cookie
-    r = web.Response()
-    r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)
-    user.passwd = '******'
-    r.content_type = 'application/json'
-    r.body = json.dumps(user, ensure_ascii=False).encode('utf-8')
-    return r
-
-@post('/api/authenticate')
-def authenticate(*, email, passwd):
-    if not email:
-        raise APIValueError('email', 'Invalid email.')
-    if not passwd:
-        raise APIValueError('passwd', 'Invalid passwd.')
-    users = yield from User.findAll('email=?', [email])
-    if len(users) == 0:
-        raise APIValueError('email', 'Email not exist.')
-    user = users[0]
-    # check passwd:
-    sha1 = hashlib.sha1()
-    sha1.update(user.id.encode('utf-8'))
-    sha1.update(b' :')
-    sha1.update(passwd.encode('utf-8'))
-    if user.passwd != sha1.hexdigest():
-        raise APIValueError('passwd', 'Invalid password.')
-    # authenticate ok, set cookie:
     r = web.Response()
     r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)
     user.passwd = '******'
