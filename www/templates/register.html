@@ -6,8 +6,8 @@
 
 <script>
 function validateEmail(email) {
-    var re = /^[a-z0-9\.\-\_]+@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
-    return re.test(email.toLoverCase());
+    var re = /^[a-z0-9\.\-\_]+\@[a-z0-9\-\_]+(\.[a-z0-9\-\_]+){1,4}$/;
+    return re.test(email.toLowerCase());
 }
 $(function () {
     var vm = new Vue({
@@ -16,7 +16,7 @@ $(function () {
             name: '',
             email: '',
             password1: '',
-            password2: '',
+            password2: ''
         },
         methods: {
             submit: function (event) {
@@ -25,7 +25,7 @@ $(function () {
                 if (! this.name.trim()) {
                     return $form.showFormError('请输入名字');
                 }
-                if (! validateEmail(this.email.trim().toLoverCase())) {
+                if (! validateEmail(this.email.trim().toLowerCase())) {
                     return $form.showFormError('请输入正确的Email地址');
                 }
                 if (this.password1.length < 6) {
@@ -34,7 +34,7 @@ $(function () {
                 if (this.password1 !== this.password2) {
                     return $form.showFormError('两次输入的口令不一致');
                 }
-                var email = this.email.trim().toLoverCase();
+                var email = this.email.trim().toLowerCase();
                 $form.postJSON('/api/users', {
                     name: this.name.trim(),
                     email: email,
@@ -49,7 +49,7 @@ $(function () {
         }
     });
     $('#vm').show();
-})
+});
 </script>
 
 {% endblock %}

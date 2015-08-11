@@ -86,7 +86,7 @@ def authenticate(*, email, passwd):
     if not email:
         raise APIValueError('email', 'Invalid email.')
     if not passwd:
-        raise APIValueError('passwd', 'Invalid passwd.')
+        raise APIValueError('passwd', 'Invalid password.')
     users = yield from User.findAll('email=?', [email])
     if len(users) == 0:
         raise APIValueError('email', 'Email not exist.')
@@ -94,7 +94,7 @@ def authenticate(*, email, passwd):
     # check passwd:
     sha1 = hashlib.sha1()
     sha1.update(user.id.encode('utf-8'))
-    sha1.update(b' :')
+    sha1.update(b':')
     sha1.update(passwd.encode('utf-8'))
     if user.passwd != sha1.hexdigest():
         raise APIValueError('passwd', 'Invalid password.')
@@ -132,7 +132,7 @@ def api_register_user(*, email, name, passwd):
     sha1_passwd = '%s:%s' % (uid, passwd)
     user = User(id=uid, name=name.strip(), email=email, passwd=hashlib.sha1(sha1_passwd.encode('utf-8')).hexdigest(), image='http://www.gravatar.com/avatar/%s?d=mm&s=120' % hashlib.md5(email.encode('utf-8')).hexdigest())
     yield from user.save()
-    # make session cookie
+    # make session cookie:
     r = web.Response()
     r.set_cookie(COOKIE_NAME, user2cookie(user, 86400), max_age=86400, httponly=True)
     user.passwd = '******'
