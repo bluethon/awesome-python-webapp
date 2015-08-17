@@ -1,0 +1,110 @@
+Common subdirectories: www/__pycache__ and ../liao/awesome-python3-webapp/www/__pycache__
+diff www/apis.py ../liao/awesome-python3-webapp/www/apis.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+50c52
+<             self.offset = self.page_size * (page_index -1)
+---
+>             self.offset = self.page_size * (page_index - 1)
+91c93
+< if __name__ == '__main__':
+---
+> if __name__=='__main__':
+94d95
+< 
+diff www/app.py ../liao/awesome-python3-webapp/www/app.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+diff www/config.py ../liao/awesome-python3-webapp/www/config.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config_default.py ../liao/awesome-python3-webapp/www/config_default.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config_override.py ../liao/awesome-python3-webapp/www/config_override.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/coroweb.py ../liao/awesome-python3-webapp/www/coroweb.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+Only in ../liao/awesome-python3-webapp/www/: favicon.ico
+diff www/handlers.py ../liao/awesome-python3-webapp/www/handlers.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+13c15
+< from apis import APIValueError, APIResourceNotFoundError
+---
+> from apis import Page, APIValueError, APIResourceNotFoundError
+21c23,36
+< # 计算加密cookie:
+---
+> def check_admin(request):
+>     if request.__user__ is None or not request.__user__.admin:
+>         raise APIPermissionError()
+> 
+> def get_page_index(page_str):
+>     p = 1
+>     try:
+>         p = int(page_str)
+>     except ValueError as e:
+>         pass
+>     if p < 1:
+>         p = 1
+>     return p
+> 
+31a47,50
+> def text2html(text):
+>     lines = map(lambda s: '<p>%s</p>' % s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;'), filter(lambda s: s.strip() != '', text.split('\n')))
+>     return ''.join(lines)
+> 
+71a91,103
+> @get('/blog/{id}')
+> def get_blog(id):
+>     blog = yield from Blog.find(id)
+>     comments = yield from Comment.findAll('blog_id=?', [id], orderBy='created_at desc')
+>     for c in comments:
+>         c.html_content = text2html(c.content)
+>     blog.html_content = markdown2.markdown(blog.content)
+>     return {
+>         '__template__': 'blog.html',
+>         'blog': blog,
+>         'comments': comments
+>     }
+> 
+116a149,156
+> @get('/manage/blogs/create')
+> def manage_create_blog():
+>     return {
+>         '__template__': 'manage_blog_edit.html',
+>         'id': '',
+>         'action': '/api/blogs'
+>     }
+> 
+148c188
+< @post('api/blogs')
+---
+> @post('/api/blogs')
+diff www/models.py ../liao/awesome-python3-webapp/www/models.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/orm.py ../liao/awesome-python3-webapp/www/orm.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+4a7
+> 
+106c109
+<         if name == 'Model':
+---
+>         if name=='Model':
+Only in www/: schema.sql
+Common subdirectories: www/static and ../liao/awesome-python3-webapp/www/static
+Common subdirectories: www/templates and ../liao/awesome-python3-webapp/www/templates
