@@ -36,6 +36,21 @@ diff www/handlers.py ../liao/awesome-python3-webapp/www/handlers.py
 > 
 35d36
 < # 计算加密cookie:
+149c150
+< def manage_blog(*, page='1'):
+---
+> def manage_blogs(*, page='1'):
+187a189,198
+> 
+> @get('/api/blogs')
+> def api_blogs(*, page='1'):
+>     page_index = get_page_index(page)
+>     num = yield from Blog.findNumber('count(id)')
+>     p = Page(num, page_index)
+>     if num == 0:
+>         return dict(page=p, blogs=())
+>     blogs = yield from Blog.findAll(orderBy='created_at desc', limit=(p.offset, p.limit))
+>     return dict(page=p, blogs=blogs)
 diff www/models.py ../liao/awesome-python3-webapp/www/models.py
 7a8,9
 > __author__ = 'Michael Liao'
