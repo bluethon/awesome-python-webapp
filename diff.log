@@ -1,83 +1,55 @@
-diff www/templates/__base__.html ../liao/awesome-python3-webapp/www/templates/__base__.html
-22c22
-<     {% block meta %}<!-- block meta -->{% endblock %}
----
->     {% block meta %}<!-- block meta  -->{% endblock %}
-33c33
-<     {% block beforehead %}<!-- before head -->{% endblock %}
----
->     {% block beforehead %}<!-- before head  -->{% endblock %}
-41,42c41,42
-<                 <li><a target="_blank" href="#"><i class="uk-icon-book"></i> 教程</a></li>
-<                 <li><a target="_blank" href="#"><i class="uk-icon-code"></i> 源码</a></li>
----
->                 <li><a target="_blank" href="http://www.liaoxuefeng.com/wiki/0014316089557264a6b348958f449949df42a6d3a2e542c000"><i class="uk-icon-book"></i> 教程</a></li>
->                 <li><a target="_blank" href="https://github.com/michaelliao/awesome-python3-webapp"><i class="uk-icon-code"></i> 源码</a></li>
-48c48
-<                         <a href="#0"><i class="uk-icon-user"></i> {{ __user__.name }} </a>
----
->                         <a href="#0"><i class="uk-icon-user"></i> {{ __user__.name }}</a>
-77,80c77,80
-<                     <a href="#" target="_blank" class="uk-icon-bottom uk-icon-weibo"></a>
-<                     <a href="#" target="_blank" class="uk-icon-bottom uk-icon-github"></a>
-<                     <a href="#" target="_blank" class="uk-icon-bottom uk-icon-linkedin-square"></a>
-<                     <a href="#" target="_blank" class="uk-icon-bottom uk-icon-twitter"></a>
----
->                     <a target="_blank" href="http://weibo.com/liaoxuefeng" class="uk-icon-button uk-icon-weibo"></a>
->                     <a target="_blank" href="https://github.com/michaelliao" class="uk-icon-button uk-icon-github"></a>
->                     <a target="_blank" href="http://www.linkedin.com/in/liaoxuefeng" class="uk-icon-button uk-icon-linkedin-square"></a>
->                     <a target="_blank" href="https://twitter.com/liaoxuefeng" class="uk-icon-button uk-icon-twitter"></a>
-82,84c82,84
-<                 <p>Powerd by <a href="#">Awesome Python Webapp</a>. Copyright &copy; 2015. [<a href="/manage/" target="_blank">Manage</a>]</p>
-<                 <p><a href="http://www.liaoxuefeng.com/" target="_blank">www.liaoxuefeng.com</a>. All rights reserved. </p>
-<                 <a href="http://www.w3.org/TR/html5/" target="_blank"><i class="uk-icon-html5" style="font-size:64px; color: #444;"></i></a>
----
->                 <p>Powered by <a href="http://awesome.liaoxuefeng.com">Awesome Python Webapp</a>. Copyright &copy; 2014. [<a href="/manage/" target="_blank">Manage</a>]</p>
->                 <p><a href="http://www.liaoxuefeng.com/" target="_blank">www.liaoxuefeng.com</a>. All rights reserved.</p>
->                 <a target="_blank" href="http://www.w3.org/TR/html5/"><i class="uk-icon-html5" style="font-size:64px; color: #444;"></i></a>
-85a86
+Common subdirectories: www/__pycache__ and ../liao/awesome-python3-webapp/www/__pycache__
+diff www/apis.py ../liao/awesome-python3-webapp/www/apis.py
+3a4,5
+> __author__ = 'Michael Liao'
 > 
-diff www/templates/blogs.html ../liao/awesome-python3-webapp/www/templates/blogs.html
-22c22
-<         <hr class="uk-article-divider"></hr>
+91c93
+< if __name__ == '__main__':
 ---
->         <hr class="uk-article-divider">
-30,33c30,33
-<                 <li><i class="uk-icon-thumbs-o-up"></i><a href="#" target="_blank">编程</a></li>
-<                 <li><i class="uk-icon-thumbs-o-up"></i><a href="#" target="_blank">读书</a></li>
-<                 <li><i class="uk-icon-thumbs-o-up"></i><a href="#" target="_blank">Python教程</a></li>
-<                 <li><i class="uk-icon-thumbs-o-up"></i><a href="#" target="_blank">Git教程</a></li>
+> if __name__=='__main__':
+94d95
+< 
+diff www/app.py ../liao/awesome-python3-webapp/www/app.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+diff www/config.py ../liao/awesome-python3-webapp/www/config.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config_default.py ../liao/awesome-python3-webapp/www/config_default.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config_override.py ../liao/awesome-python3-webapp/www/config_override.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/coroweb.py ../liao/awesome-python3-webapp/www/coroweb.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+Only in ../liao/awesome-python3-webapp/www/: favicon.ico
+diff www/handlers.py ../liao/awesome-python3-webapp/www/handlers.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+35d36
+< # 计算加密cookie:
+diff www/models.py ../liao/awesome-python3-webapp/www/models.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/orm.py ../liao/awesome-python3-webapp/www/orm.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+4a7
+> 
+106c109
+<         if name == 'Model':
 ---
->                 <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/category/0013738748415562fee26e070fa4664ad926c8e30146c67000">编程</a></li>
->                 <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/category/0013738748248885ddf38d8cd1b4803aa74bcda32f853fd000">读书</a></li>
->                 <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/wiki/001374738125095c955c1e6d8bb493182103fac9270762a000">Python教程</a></li>
->                 <li><i class="uk-icon-thumbs-o-up"></i> <a target="_blank" href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000">Git教程</a></li>
-38c38
-< {% endblock %}
----
-> {% endblock %}
-\ No newline at end of file
-diff www/templates/register.html ../liao/awesome-python3-webapp/www/templates/register.html
-63c63
-<         <h1>欢迎注册!</h1>
----
->         <h1>欢迎注册！</h1>
-diff www/templates/signin.html ../liao/awesome-python3-webapp/www/templates/signin.html
-6,7c6,7
-<     <link href="/static/css/uikit.min.css" rel="stylesheet"></head>
-<     <link href="/static/css/uikit.gradient.min.css" rel="stylesheet"></head>
----
->     <link rel="stylesheet" href="/static/css/uikit.min.css">
->     <link rel="stylesheet" href="/static/css/uikit.gradient.min.css">
-47c47
-<             <p><a href="/" class="uk-icon-button"><i class="uk-icon-html5"></i></a><a href="/">Awesome Python Webapp</a></p>
----
->             <p><a href="/" class="uk-icon-button"><i class="uk-icon-html5"></i></a> <a href="/">Awesome Python Webapp</a></p>
-53c53
-<                         <input type="text" v-model="email" name="email" placeholder="电子邮件" maxlength="50" class="uk-width-1-1 uk-form-large">
----
->                         <input v-model="email" name="email" type="text" placeholder="电子邮件" maxlength="50" class="uk-width-1-1 uk-form-large">
-59c59
-<                         <input type="password" v-model="passwd" name="passwd" placeholder="口令" maxlength="50" class="uk-width-1-1 uk-form-large">
----
->                         <input v-model="passwd" name="passwd" type="password" placeholder="口令" maxlength="50" class="uk-width-1-1 uk-form-large">
+>         if name=='Model':
+Only in www/: schema.sql
+Common subdirectories: www/static and ../liao/awesome-python3-webapp/www/static
+Common subdirectories: www/templates and ../liao/awesome-python3-webapp/www/templates
