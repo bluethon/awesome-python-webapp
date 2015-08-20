@@ -187,9 +187,14 @@ def api_register_user(*, email, name, passwd):
     return r
 
 @get('/api/blogs')
-def api_get_blog(*, id):
-    blog = yield from Blog.find(id)
-    return blog
+def api_blogs(*, page='1'):
+    page_index = get_page_index(page)
+    num = yield from Blog.findNumber('count(id)')
+    p = Page(num, page_index)
+    if num == 0:
+        return dict(page=p, blogs=())
+    blogs = yield from Blog.findAll(orderBy='created_at desc', limit=(p.offset, p.limit))
+    return dict(page=p, blogs=blogs)
 
 @get('/api/blogs/{id}')
 def api_get_blog(*, id):
