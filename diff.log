@@ -1,0 +1,197 @@
+diff www/apis.py ../liao/awesome-python3-webapp/www/apis.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+91c93
+< if __name__ == '__main__':
+---
+> if __name__=='__main__':
+94d95
+< 
+diff www/app.py ../liao/awesome-python3-webapp/www/app.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+diff www/config_default.py ../liao/awesome-python3-webapp/www/config_default.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config_override.py ../liao/awesome-python3-webapp/www/config_override.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/config.py ../liao/awesome-python3-webapp/www/config.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/coroweb.py ../liao/awesome-python3-webapp/www/coroweb.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+只在 ../liao/awesome-python3-webapp/www/ 存在：favicon.ico
+diff www/handlers.py ../liao/awesome-python3-webapp/www/handlers.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+35d36
+< # 计算加密cookie:
+78,84c79,86
+< def index(request):
+<     summary = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+<     blogs = [
+<         Blog(id='1', name='Test Blog', summary=summary, created_at=time.time()-120),
+<         Blog(id='2', name='Something New', summary=summary, created_at=time.time()-3600),
+<         Blog(id='3', name='Learn Swift', summary=summary, created_at=time.time()-7200)
+<     ]
+---
+> def index(*, page='1'):
+>     page_index = get_page_index(page)
+>     num = yield from Blog.findNumber('count(id)')
+>     page = Page(num)
+>     if num == 0:
+>         blogs = []
+>     else:
+>         blogs = yield from Blog.findAll(orderBy='created_at desc', limit=(page.offset, page.limit))
+86a89
+>         'page': page,
+147a151,161
+> @get('/manage/')
+> def manage():
+>     return 'redirect:/manage/comments'
+> 
+> @get('/manage/comments')
+> def manage_comments(*, page='1'):
+>     return {
+>         '__template__': 'manage_comments.html',
+>         'page_index': get_page_index(page)
+>     }
+> 
+162a177,236
+> @get('/manage/blogs/edit')
+> def manage_edit_blog(*, id):
+>     return {
+>         '__template__': 'manage_blog_edit.html',
+>         'id': id,
+>         'action': '/api/blogs/%s' % id
+>     }
+> 
+> @get('/manage/users')
+> def manage_users(*, page='1'):
+>     return {
+>         '__template__': 'manage_users.html',
+>         'page_index': get_page_index(page)
+>     }
+> 
+> @get('/api/comments')
+> def api_comments(*, page='1'):
+>     page_index = get_page_index(page)
+>     num = yield from Comment.findNumber('count(id)')
+>     p = Page(num, page_index)
+>     if num == 0:
+>         return dict(page=p, comments=())
+>     comments = yield from Comment.findAll(orderBy='created_at desc', limit=(p.offset, p.limit))
+>     return dict(page=p, comments=comments)
+> 
+> @post('/api/blogs/{id}/comments')
+> def api_create_comment(id, request, *, content):
+>     user = request.__user__
+>     if user is None:
+>         raise APIPermissionError('Please signin first.')
+>     if not content or not content.strip():
+>         raise APIValueError('content')
+>     blog = yield from Blog.find(id)
+>     if blog is None:
+>         raise APIResourceNotFoundError('Blog')
+>     comment = Comment(blog_id=blog.id, user_id=user.id, user_name=user.name, user_image=user.image, content=content.strip())
+>     yield from comment.save()
+>     return comment
+> 
+> @post('/api/comments/{id}/delete')
+> def api_delete_comments(id, request):
+>     check_admin(request)
+>     c = yield from Comment.find(id)
+>     if c is None:
+>         raise APIResourceNotFoundError('Comment')
+>     yield from c.remove()
+>     return dict(id=id)
+> 
+> @get('/api/users')
+> def api_get_users(*, page='1'):
+>     page_index = get_page_index(page)
+>     num = yield from User.findNumber('count(id)')
+>     p = Page(num, page_index)
+>     if num == 0:
+>         return dict(page=p, users=())
+>     users = yield from User.findAll(orderBy='created_at desc', limit=(p.offset, p.limit))
+>     for u in users:
+>         u.passwd = '******'
+>     return dict(page=p, users=users)
+> 
+215a290,312
+> 
+> @post('/api/blogs/{id}')
+> def api_update_blog(id, request, *, name, summary, content):
+>     check_admin(request)
+>     blog = yield from Blog.find(id)
+>     if not name or not name.strip():
+>         raise APIValueError('name', 'name cannot be empty.')
+>     if not summary or not summary.strip():
+>         raise APIValueError('summary', 'summary cannot be empty.')
+>     if not content or not content.strip():
+>         raise APIValueError('content', 'content cannot be empty.')
+>     blog.name = name.strip()
+>     blog.summary = summary.strip()
+>     blog.content = content.strip()
+>     yield from blog.update()
+>     return blog
+> 
+> @post('/api/blogs/{id}/delete')
+> def api_delete_blog(request, *, id):
+>     check_admin(request)
+>     blog = yield from Blog.find(id)
+>     yield from blog.remove()
+>     return dict(id=id)
+diff www/models.py ../liao/awesome-python3-webapp/www/models.py
+7a8,9
+> __author__ = 'Michael Liao'
+> 
+diff www/orm.py ../liao/awesome-python3-webapp/www/orm.py
+3a4,5
+> __author__ = 'Michael Liao'
+> 
+4a7
+> 
+106c109
+<         if name == 'Model':
+---
+>         if name=='Model':
+www/__pycache__ 和 ../liao/awesome-python3-webapp/www/__pycache__ 有共同的子目录
+diff www/pymonitor.py ../liao/awesome-python3-webapp/www/pymonitor.py
+3c3,4
+< # @Date    : 2015-08-24 10:43:59
+---
+> 
+> __author__ = 'Michael Liao'
+13c14
+< class MyFileSystemEventHandler(FileSystemEventHandler):
+---
+> class MyFileSystemEventHander(FileSystemEventHandler):
+16c17
+<         super(MyFileSystemEventHandler, self).__init__()
+---
+>         super(MyFileSystemEventHander, self).__init__()
+30c31
+<         log('Kill process [%s]...' %  process.pid)
+---
+>         log('Kill process [%s]...' % process.pid)
+47c48
+<     observer.schedule(MyFileSystemEventHandler(restart_process), path, recursive=True)
+---
+>     observer.schedule(MyFileSystemEventHander(restart_process), path, recursive=True)
+49c50
+<     log('Watching direcory %s...' % path)
+---
+>     log('Watching directory %s...' % path)
+只在 www/ 存在：schema.sql
+www/static 和 ../liao/awesome-python3-webapp/www/static 有共同的子目录
+www/templates 和 ../liao/awesome-python3-webapp/www/templates 有共同的子目录
