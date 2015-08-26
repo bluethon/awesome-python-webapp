@@ -46,7 +46,7 @@ def start_watch(path, callback):
     observer = Observer()
     observer.schedule(MyFileSystemEventHandler(restart_process), path, recursive=True)
     observer.start()
-    log('Watching direcory %s...' % path)
+    log('Watching directory %s...' % path)
     start_process()
     try:
         while True:
